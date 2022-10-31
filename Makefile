@@ -1,38 +1,34 @@
 CC=arm-none-eabi-gcc
-CFLAGS=-mcpu=cortex-m4 -mthumb -nostdlib -DSTM32F410Rx -g
+CFLAGS=-mcpu=cortex-m4 -mthumb -nostdlib
+CPPFLAGS=-DSTM32F410Rx \
+				 -Ivendor/CMSIS/Device/ST/STM32F4/Include \
+				 -Ivendor/CMSIS/CMSIS/Core/Include
+
 LINKER_FILE=linker_script.ld
+LDFLAGS=-T $(LINKER_FILE)
+
 BINARY = blink.elf
+
 PROGRAMMER = openocd
 PROGRAMMER_FLAGS = -f interface/stlink.cfg -f target/stm32f4x.cfg
-INCLUDE_PATHS = -I./vendor/CMSIS/Device/ST/STM32F4/Include \
-								-I./vendor/CMSIS/CMSIS/Core/Include
-OUTPUT_DIR = build
 
-.PHONY: output_dir
+all: $(BINARY)
 
-all: output_dir main.o startup.o system_stm32f4xx.o
-	mkdir -p bin
-	$(CC) $(CFLAGS) $(OUTPUT_DIR)/main.o $(OUTPUT_DIR)/startup.o $(OUTPUT_DIR)/system_stm32f4xx.o -o $(OUTPUT_DIR)/$(BINARY) -T $(LINKER_FILE)
-
-startup.o: startup.c
-	$(CC) $(CFLAGS) startup.c -o $(OUTPUT_DIR)/startup.o -c
+$(BINARY): main.o startup.o system_stm32f4xx.o
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $^ -o $(BINARY)
 
 main.o: main.c
-	$(CC) $(CFLAGS) main.c -o $(OUTPUT_DIR)/main.o -c $(INCLUDE_PATHS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) main.c -c
 
-system_stm32f4xx.o: vendor\CMSIS\Device\ST\STM32F4\Source\Templates\system_stm32f4xx.c
-	$(CC) $(CFLAGS) -c $< -o $(OUTPUT_DIR)/$@ $(INCLUDE_PATHS)
+startup.o: startup.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) startup.c -c
 
-output_dir:
-	mkdir -p $(OUTPUT_DIR)
+system_stm32f4xx.o: vendor/CMSIS/Device/ST/STM32F4/Source/Templates/system_stm32f4xx.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) vendor/CMSIS/Device/ST/STM32F4/Source/Templates/system_stm32f4xx.c -c
 
+.PHONY: clean
 clean:
-	rm -rf *.o *.elf bin/
+	rm -f *.o *.elf
 
-rebuild: clean all
-
-flash:
-	$(PROGRAMMER) $(PROGRAMMER_FLAGS) -c "program $(OUTPUT_DIR)/$(BINARY) verify reset exit"
-
-debug:
-	$(PROGRAMMER) $(PROGRAMMER_FLAGS)
+flash: $(BINARY)
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) -c "program $(BINARY) verify reset exit"
