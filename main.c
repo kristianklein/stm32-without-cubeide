@@ -1,44 +1,34 @@
 #include <stdint.h>
 #include "stm32f4xx.h"
 
-/* Required headers:
-  * - stm32f4xx.h
-  *  - stm32f410rx.h
-  *     - core_cm4.h
-  *       - cmsis_version.h
-  *       - cmsis_compiler.h
-  *         - cmsis_gcc.h
-  *       - mpu_armv7.h
-  *     - system_stm32f4xx.h (system_stm32f4xx.c)
- */
-
 #define LED_PIN 5
 
 void clock_init();
-void peripheral_enable_wait(volatile uint32_t *register_address);
+void delay_ms(uint32_t milliseconds);
+
+volatile uint32_t ticks;
 
 void main(void)
 {
-  /*  Clock setup:
-   *  By default the NUCLEO board uses the 8 MHz MCO from the ST-LINK as HSE.
-   *  Also has on-board 32 kHz LSE (X2).
-   */
-
   clock_init();
+  SystemCoreClockUpdate(); // Update the internal clock frequency variable
 
   RCC->AHB1ENR |= (1 << RCC_AHB1ENR_GPIOAEN_Pos);
   
-  // // do two dummy reads after enabling the peripheral clock, as per the errata
+  // do two dummy reads after enabling the peripheral clock, as per the errata
    volatile uint32_t dummy;
    dummy = RCC->AHB1ENR;
    dummy = RCC->AHB1ENR;
 
   GPIOA->MODER |= (1 << GPIO_MODER_MODER5_Pos);
-  
+
+  SysTick_Config(100000);
+  __enable_irq();
+
   while(1)
   {
     GPIOA->ODR ^= (1 << LED_PIN);
-    for (uint32_t i = 0; i < 1000000; i++);
+    delay_ms(500);
   }
 }
 
@@ -49,15 +39,14 @@ void clock_init()
    * through the PLL to get 100 MHz system clock.
    */ 
 
-  // Set the voltage scaling to VOS1 to allow 100 MHz clock
+  // Enable power controller and set voltage scale mode 1
   RCC->APB1ENR |= RCC_APB1ENR_PWREN_Msk;
   volatile uint32_t dummy;
   dummy = RCC->APB1ENR;
   dummy = RCC->APB1ENR;
-  // peripheral_enable_wait(&RCC->APB1ENR);
-  PWR->CR |= (0b11 << PWR_CR_VOS_Pos); // VOS1
+  PWR->CR |= (0b11 << PWR_CR_VOS_Pos);
 
-  // Configure flash controller for 100 MHz (3.3V -> 3 wait states)
+  // Configure flash controller for 3V3 supply and 100 MHz -> 3 wait states
   FLASH->ACR |= FLASH_ACR_LATENCY_3WS;
 
   // Set HSE bypass (to use external clock on OSC_IN, not a crystal) and enable HSE
@@ -74,30 +63,38 @@ void clock_init()
    * 
    * Since APB1 clock must not be more than 50 MHz, set the PPRE1 divider to 2.
   */
-  // Clear PLLM, PLLN and PLLP bits first
-  RCC->PLLCFGR &= ~((0b111111 << RCC_PLLCFGR_PLLM_Pos) | (0b111111111 << RCC_PLLCFGR_PLLN_Pos) | (0b11 << RCC_PLLCFGR_PLLP_Pos));
+  // Clear PLLM, PLLN and PLLP bits
+  RCC->PLLCFGR &= ~(RCC_PLLCFGR_PLLM_Msk | RCC_PLLCFGR_PLLN_Msk | RCC_PLLCFGR_PLLP_Msk);
   
   // Set PLLM, PLLN and PLLP, and select HSE as PLL source
   RCC->PLLCFGR |= ((4 << RCC_PLLCFGR_PLLM_Pos) | (200 << RCC_PLLCFGR_PLLN_Pos) | (1 << RCC_PLLCFGR_PLLP_Pos) | (1 << RCC_PLLCFGR_PLLSRC_Pos));
-  RCC->CFGR |= (0b100 << RCC_CFGR_PPRE1_Pos); // APB1 prescaler
+  
+  // Set APB1 prescaler to 2
+  RCC->CFGR |= (0b100 << RCC_CFGR_PPRE1_Pos);
   
   // Enable PLL and wait for ready
   RCC->CR |= RCC_CR_PLLON_Msk;
   while (! (RCC->CR & RCC_CR_PLLRDY_Msk));
 
-  // Select HSE as system clock
+  // Select PLL output as system clock
   RCC->CFGR |= (RCC_CFGR_SW_PLL << RCC_CFGR_SW_Pos);
   while (! (RCC->CFGR & RCC_CFGR_SWS_PLL));
 }
 
-void peripheral_enable_wait(volatile uint32_t *register_address)
+void systick_handler()
 {
-  volatile uint32_t dummy;
-  dummy = *register_address;
-  dummy = *register_address;
+  ticks++;
 }
 
-void hard_fault_handler()
+void delay_ms(uint32_t milliseconds)
 {
-  while(1);
+  uint32_t start = ticks;
+  uint32_t end = start + milliseconds;
+
+  if (end < start) // overflow
+  {
+    while (ticks > start); // wait for ticks to wrap
+  }
+
+  while (ticks < end);
 }
