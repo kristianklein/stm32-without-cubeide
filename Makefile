@@ -5,7 +5,7 @@ CPPFLAGS=-DSTM32F410Rx \
 				 -Ivendor/CMSIS/CMSIS/Core/Include
 
 LINKER_FILE=linker_script.ld
-LDFLAGS=-T $(LINKER_FILE)
+LDFLAGS=-T $(LINKER_FILE) -u _printf_float
 
 BINARY = blink.elf
 

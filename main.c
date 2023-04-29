@@ -32,7 +32,7 @@ void main(void)
   while(1)
   {
     GPIOA->ODR ^= (1 << LED_PIN);
-    printf("[%d] Hello, World!\r\n", ticks);
+    printf("[%.3f] Hello, World!\r\n", (float)ticks/1000.0);
     delay_ms(500);
   }
 }
