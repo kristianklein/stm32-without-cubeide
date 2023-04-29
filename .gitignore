@@ -1,5 +1,7 @@
 # Editor settings
 .vscode
+.project
+.settings
 
 # Build putput
 *.o

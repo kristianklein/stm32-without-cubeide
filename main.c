@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "stm32f4xx.h"
+#include "usart.h"
 
 #define LED_PIN 5
 
@@ -25,6 +26,8 @@ void main(void)
 
   SysTick_Config(100000);
   __enable_irq();
+
+  usart_init(USART2);
 
   while(1)
   {
