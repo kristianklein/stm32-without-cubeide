@@ -196,6 +196,7 @@ uint32_t isr_vector[ISR_VECTOR_SIZE_WORDS] __attribute__((section(".isr_vector")
 
 extern uint32_t _etext, _sdata, _edata, _sbss, _ebss, _sidata;
 void main(void);
+void __libc_init_array();
 
 void reset_handler(void)
 {
@@ -218,6 +219,7 @@ void reset_handler(void)
     bss[i] = 0;
   }
   
+  __libc_init_array();
   main();
 }
 

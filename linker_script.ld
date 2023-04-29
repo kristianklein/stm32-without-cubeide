@@ -18,7 +18,9 @@ SECTIONS
     . = ALIGN(4);
 		
     *(.text)
+    *(.text.*)
     *(.rodata)
+    *(.rodata.*)
 		
     . = ALIGN(4);
     _etext = .;
@@ -32,6 +34,7 @@ SECTIONS
     _sdata = .;
 		
     *(.data)
+    *(.data.*)
 
     . = ALIGN(4);
     _edata = .;
@@ -41,10 +44,13 @@ SECTIONS
   {
     . = ALIGN(4);
     _sbss = .;
+    __bss_start__ = _sbss;
 		
     *(.bss)
 		
     . = ALIGN(4);
     _ebss = .;
+    __bss_end__ = _ebss;
+    _end = _ebss;
   } >SRAM
 }

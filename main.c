@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include "stm32f4xx.h"
 
 #define LED_PIN 5
@@ -28,6 +29,7 @@ void main(void)
   while(1)
   {
     GPIOA->ODR ^= (1 << LED_PIN);
+    printf("[%d] Hello, World!\r\n", ticks);
     delay_ms(500);
   }
 }

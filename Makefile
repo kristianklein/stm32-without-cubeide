@@ -1,5 +1,5 @@
 CC=arm-none-eabi-gcc
-CFLAGS=-mcpu=cortex-m4 -mthumb -nostdlib
+CFLAGS=-mcpu=cortex-m4 -mthumb --specs=nano.specs
 CPPFLAGS=-DSTM32F410Rx \
 				 -Ivendor/CMSIS/Device/ST/STM32F4/Include \
 				 -Ivendor/CMSIS/CMSIS/Core/Include
@@ -14,17 +14,21 @@ PROGRAMMER_FLAGS = -f interface/stlink.cfg -f target/stm32f4x.cfg
 
 all: $(BINARY)
 
-$(BINARY): main.o startup.o system_stm32f4xx.o
+$(BINARY): main.o startup.o system_stm32f4xx.o syscalls.o
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $^ -o $(BINARY)
 
 main.o: main.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) main.c -c
+	$(CC) $(CFLAGS) $(CPPFLAGS) $^ -c
 
 startup.o: startup.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) startup.c -c
+	$(CC) $(CFLAGS) $(CPPFLAGS) $^ -c
 
 system_stm32f4xx.o: vendor/CMSIS/Device/ST/STM32F4/Source/Templates/system_stm32f4xx.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) vendor/CMSIS/Device/ST/STM32F4/Source/Templates/system_stm32f4xx.c -c
+
+syscalls.o: syscalls.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) $^ -c
+
 
 .PHONY: clean
 clean:
