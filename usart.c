@@ -55,14 +55,17 @@ void usart_init(USART_TypeDef *usart)
   GPIOA->MODER &= ~(GPIO_MODER_MODE2_Msk | GPIO_MODER_MODE3_Msk);
   GPIOA->MODER |= (0b10 << GPIO_MODER_MODE2_Pos) | (0b10 << GPIO_MODER_MODE3_Pos);
 
-  // USART2 is AF7 (found in datasheet)
+  /* USART2 is AF7 (found in datasheet) */
   GPIOA->AFR[0] &= ~(GPIO_AFRL_AFRL2 | GPIO_AFRL_AFRL3);
   GPIOA->AFR[0] |= (7 << GPIO_AFRL_AFSEL2_Pos) | (7 << GPIO_AFRL_AFSEL3_Pos);
   
-  /* Configure USART2 */
-  USART2->CR1 = 0;
+  /* Configure and enable USART2 */
   USART2->BRR = (27 << 4) | 2; // 115200 baud @ 50 MHz APB1 clock and 16x oversampling
   USART2->CR1 |= USART_CR1_UE | USART_CR1_TE; // USART enable and transmitter enable
+
+  // Dummy write, because the first byte seems to always be dropped
+  USART2->DR = 0;
+  while (!(USART2->SR & USART_SR_TC));
 }
 
 void usart_write(USART_TypeDef *usart, char c)

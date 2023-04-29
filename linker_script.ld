@@ -21,8 +21,8 @@ SECTIONS
     *(.text.*)
     *(.rodata)
     *(.rodata.*)
-    KEEP (*(.init))
-    KEEP (*(.fini))
+    KEEP(*(.init))
+    KEEP(*(.fini))
     *(.eh_frame)
     *(.ARM.exidx)
 		
@@ -58,6 +58,5 @@ SECTIONS
     . = ALIGN(4);
     _ebss = .;
     __bss_end__ = _ebss;
-    _end = _ebss;
   } >SRAM
 }
