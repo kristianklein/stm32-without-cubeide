@@ -24,6 +24,8 @@ SECTIONS
     _etext = .;
   } >FLASH
 
+  _sidata = LOADADDR(.data);
+
   .data :
   {
     . = ALIGN(4);
