@@ -60,7 +60,7 @@ void usart_init(USART_TypeDef *usart)
   GPIOA->AFR[0] |= (7 << GPIO_AFRL_AFSEL2_Pos) | (7 << GPIO_AFRL_AFSEL3_Pos);
   
   /* Configure and enable USART2 */
-  USART2->BRR = (27 << 4) | 2; // 115200 baud @ 50 MHz APB1 clock and 16x oversampling
+  USART2->BRR = 434; // 115200 baud @ 50 MHz APB1 clock and 16x oversampling
   USART2->CR1 |= USART_CR1_UE | USART_CR1_TE; // USART enable and transmitter enable
 
   // Dummy write, because the first byte seems to always be dropped
