@@ -6,3 +6,4 @@
 # Build putput
 *.o
 *.elf
+/build*
