@@ -2,38 +2,38 @@
 #include <stdio.h>
 #include "stm32f4xx.h"
 #include "usart.h"
+#include "stm32f4xx_hal.h"
 
-#define LED_PIN 5
+#define LED_PIN GPIO_PIN_5
+#define LED_PORT GPIOA
 
 void clock_init();
-void delay_ms(uint32_t milliseconds);
-
-volatile uint32_t ticks;
 
 void main(void)
 {
+  HAL_Init();
   clock_init();
   SystemCoreClockUpdate(); // Update the internal clock frequency variable
 
-  RCC->AHB1ENR |= (1 << RCC_AHB1ENR_GPIOAEN_Pos);
-  
-  // do two dummy reads after enabling the peripheral clock, as per the errata
-   volatile uint32_t dummy;
-   dummy = RCC->AHB1ENR;
-   dummy = RCC->AHB1ENR;
+  __HAL_RCC_GPIOA_CLK_ENABLE();
 
-  GPIOA->MODER |= (1 << GPIO_MODER_MODER5_Pos);
+  GPIO_InitTypeDef gpio_init = {
+    .Pin = LED_PIN,
+    .Mode = GPIO_MODE_OUTPUT_PP,
+    .Pull = GPIO_NOPULL,
+    .Speed = GPIO_SPEED_LOW,
+    .Alternate = 0
+  };
 
-  SysTick_Config(100000);
-  __enable_irq();
+  HAL_GPIO_Init(LED_PORT, &gpio_init);
 
   usart_init(USART2);
-
+  
   while(1)
   {
-    GPIOA->ODR ^= (1 << LED_PIN);
-    printf("[%.3f] Hello, World!\r\n", (float)ticks/1000.0);
-    delay_ms(500);
+    HAL_GPIO_TogglePin(LED_PORT, LED_PIN);
+    printf("[%.3f] Hello, World!\r\n", HAL_GetTick()/1000.0f);
+    HAL_Delay(500);
   }
 }
 
@@ -45,61 +45,48 @@ void clock_init()
    */ 
 
   // Enable power controller and set voltage scale mode 1
-  RCC->APB1ENR |= RCC_APB1ENR_PWREN_Msk;
-  volatile uint32_t dummy;
-  dummy = RCC->APB1ENR;
-  dummy = RCC->APB1ENR;
-  PWR->CR |= (0b11 << PWR_CR_VOS_Pos);
-
-  // Configure flash controller for 3V3 supply and 100 MHz -> 3 wait states
-  FLASH->ACR |= FLASH_ACR_LATENCY_3WS;
-
-  // Set HSE bypass (to use external clock on OSC_IN, not a crystal) and enable HSE
-  RCC->CR |= RCC_CR_HSEBYP_Msk | RCC_CR_HSEON_Msk;
-  while (!(RCC->CR & RCC_CR_HSERDY_Msk));
+  __HAL_RCC_PWR_CLK_ENABLE();
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   
   // Configure PLL dividers and multiplier
   /* Input to PLL should be 1-2 MHz (preferably 2 MHz). Choosing M=4 gives
    * us 8 MHz / 4 = 2 MHz.
    * The output of the PLL should be 100-438 MHz, so setting the feedback
-   * multiplier to 200 gives us 2 MHz * 200 = 400 MHz.
+   * multiplier to N=200 gives us 2 MHz * 200 = 400 MHz.
    * The system clock should be 100 MHz. Choosing P=4 gives us
    * 400 MHz / 4 = 100 MHz
-   * 
-   * Since APB1 clock must not be more than 50 MHz, set the PPRE1 divider to 2.
   */
-  // Clear PLLM, PLLN and PLLP bits
-  RCC->PLLCFGR &= ~(RCC_PLLCFGR_PLLM_Msk | RCC_PLLCFGR_PLLN_Msk | RCC_PLLCFGR_PLLP_Msk);
-  
-  // Set PLLM, PLLN and PLLP, and select HSE as PLL source
-  RCC->PLLCFGR |= ((4 << RCC_PLLCFGR_PLLM_Pos) | (200 << RCC_PLLCFGR_PLLN_Pos) | (1 << RCC_PLLCFGR_PLLP_Pos) | (1 << RCC_PLLCFGR_PLLSRC_Pos));
-  
-  // Set APB1 prescaler to 2
-  RCC->CFGR |= (0b100 << RCC_CFGR_PPRE1_Pos);
-  
-  // Enable PLL and wait for ready
-  RCC->CR |= RCC_CR_PLLON_Msk;
-  while (! (RCC->CR & RCC_CR_PLLRDY_Msk));
-
-  // Select PLL output as system clock
-  RCC->CFGR |= (RCC_CFGR_SW_PLL << RCC_CFGR_SW_Pos);
-  while (! (RCC->CFGR & RCC_CFGR_SWS_PLL));
-}
-
-void systick_handler()
-{
-  ticks++;
-}
-
-void delay_ms(uint32_t milliseconds)
-{
-  uint32_t start = ticks;
-  uint32_t end = start + milliseconds;
-
-  if (end < start) // overflow
+  RCC_OscInitTypeDef osc_init = {0};
+  osc_init.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  osc_init.HSEState = RCC_HSE_BYPASS;
+  osc_init.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  osc_init.PLL.PLLState = RCC_PLL_ON;
+  osc_init.PLL.PLLM = 4;
+  osc_init.PLL.PLLN = 200;
+  osc_init.PLL.PLLP = RCC_PLLP_DIV4;
+  osc_init.PLL.PLLQ = 8;
+  if (HAL_RCC_OscConfig(&osc_init) != HAL_OK)
   {
-    while (ticks > start); // wait for ticks to wrap
+    while(1);
   }
 
-  while (ticks < end);
+  /* Set PLL output as the source for the system clock.
+   * Since APB1 clock must not be more than 50 MHz, set the PCKL1 divider to 2.
+   */
+  RCC_ClkInitTypeDef clock_init = {0};
+  clock_init.ClockType = RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2 | RCC_CLOCKTYPE_HCLK;
+  clock_init.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  clock_init.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  clock_init.APB1CLKDivider = RCC_HCLK_DIV2;
+  clock_init.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&clock_init, FLASH_LATENCY_3) != HAL_OK) // Configure flash controller for 3V3 supply and 100 MHz -> 3 wait states
+  {
+    while(1);
+  }
+}
+
+void SysTick_Handler()
+{
+  HAL_IncTick();
 }

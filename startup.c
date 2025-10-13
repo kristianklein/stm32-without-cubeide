@@ -6,6 +6,8 @@
 #define STACK_POINTER_INIT_ADDRESS (SRAM_END)
 #define ISR_VECTOR_SIZE_WORDS 114
 
+#define Reset_Handler reset_handler
+
 void reset_handler(void);
 void default_handler(void);
 

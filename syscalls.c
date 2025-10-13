@@ -109,11 +109,6 @@ int _wait(int *status) {
 
 int _write(int file, char *ptr, int len) {
   (void) file;
-  
-  for (uint32_t i = 0; i < len; i++)
-  {
-    usart_write(USART2, *ptr++);
-  }
-  
+  HAL_UART_Transmit(&uart2, ptr, len, HAL_MAX_DELAY); 
   return len;
 }

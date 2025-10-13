@@ -2,6 +2,7 @@
 .vscode
 .project
 .settings
+compile_commands.json
 
 # Build putput
 *.o
