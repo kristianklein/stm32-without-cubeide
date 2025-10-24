@@ -1,5 +1,4 @@
 set(CMAKE_SYSTEM_NAME Generic)
-set(CMAKE_SYSTEM_PROCESSOR arm)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
 set(CMAKE_C_COMPILER arm-none-eabi-gcc)
@@ -9,12 +8,8 @@ set(CMAKE_ASM_COMPILER arm-none-eabi-gcc)
 # https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html
 set(MCU_FLAGS "-mcpu=cortex-m4 -mthumb")
 
-set(CMAKE_C_FLAGS_INIT "${MCU_FLAGS}")
+set(CMAKE_C_FLAGS_INIT ${MCU_FLAGS})
 set(CMAKE_CXX_FLAGS_INIT ${MCU_FLAGS})
 set(CMAKE_ASM_FLAGS_INIT ${MCU_FLAGS})
 
-set(CMAKE_FIND_ROOT_PATH /usr/lib/arm-none-eabi)
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+add_compile_definitions(STM32F410Rx)

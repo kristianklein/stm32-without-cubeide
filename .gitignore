@@ -4,7 +4,11 @@
 .settings
 compile_commands.json
 
-# Build putput
+# Build output
 *.o
 *.elf
 /build*
+
+# Temporary files
+/tmp
+/temp

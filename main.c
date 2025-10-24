@@ -1,11 +1,8 @@
 #include <stdint.h>
 #include <stdio.h>
-#include "stm32f4xx.h"
-#include "usart.h"
-#include "stm32f4xx_hal.h"
+#include "main.h"
 
-#define LED_PIN GPIO_PIN_5
-#define LED_PORT GPIOA
+UART_HandleTypeDef uart2;
 
 void clock_init();
 
@@ -15,19 +12,35 @@ void main(void)
   clock_init();
   SystemCoreClockUpdate(); // Update the internal clock frequency variable
 
+  // Initialize LED GPIO
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
-  GPIO_InitTypeDef gpio_init = {
-    .Pin = LED_PIN,
-    .Mode = GPIO_MODE_OUTPUT_PP,
-    .Pull = GPIO_NOPULL,
-    .Speed = GPIO_SPEED_LOW,
-    .Alternate = 0
-  };
+  GPIO_InitTypeDef gpio_init = {0};
+  gpio_init.Pin = LED_PIN;
+  gpio_init.Mode = GPIO_MODE_OUTPUT_PP;
+  gpio_init.Pull = GPIO_NOPULL;
+  gpio_init.Speed = GPIO_SPEED_LOW;
+  gpio_init.Alternate = 0;
 
   HAL_GPIO_Init(LED_PORT, &gpio_init);
 
-  usart_init(USART2);
+  // Initialize UART
+  uart2.Instance = USART2;
+  uart2.Init.BaudRate = 115200;
+  uart2.Init.Mode = UART_MODE_TX;
+  uart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  uart2.Init.WordLength = UART_WORDLENGTH_8B;
+  uart2.Init.StopBits = UART_STOPBITS_1;
+  uart2.Init.Parity = UART_PARITY_NONE;
+  uart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&uart2) != HAL_OK)
+  {
+    while(1);
+  }
+
+  // Dummy write, because the first byte seems to always be dropped
+  USART2->DR = 0;
+  while (!(USART2->SR & USART_SR_TC));
   
   while(1)
   {
@@ -84,9 +97,4 @@ void clock_init()
   {
     while(1);
   }
-}
-
-void SysTick_Handler()
-{
-  HAL_IncTick();
 }

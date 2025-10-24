@@ -21,7 +21,8 @@ For now, we will only use the CMSIS package and the HAL/LL driver. Initialize th
 
 `git submodule update --init vendor/STM32CubeF4/Drivers/CMSIS/Device/ST/STM32F4xx vendor/STM32CubeF4/Drivers/STM32F4xx_HAL_Driver`
 
-To update STM32CubeF4 to the newest version, simply navigate to the submodule's root directory, pull from remote and update submodules:
+To update STM32CubeF4 to the newest version, simply navigate to the submodule's root directory, pull from remote and update the 
+(already initialized) submodules:
 
 ```shell
 cd vendor/STM32CubeF4
