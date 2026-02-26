@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Target run",
+      "type": "shell",
+      "command": "gdb-multiarch",
+      "args": [
+        "-ex", "target remote :3333",
+        "-ex", "monitor resume",
+        "-ex", "quit",
+        "build/blink.elf"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

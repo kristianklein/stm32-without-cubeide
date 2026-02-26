@@ -1,8 +1,8 @@
 # Editor settings
-.vscode
-.project
-.settings
-compile_commands.json
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 
 # Build output
 *.o

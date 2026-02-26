@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug STM32F410RB",
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "openocd",
+            "configFiles": ["interface/stlink.cfg", "target/stm32f4x.cfg", "${workspaceFolder}/openocd_gdb.cfg"],
+            "cwd": "${workspaceFolder}/build",
+            "executable": "${workspaceFolder}/build/blink.elf",
+            "device": "STM32F410RB",
+            "interface": "swd",
+            "gdbPath": "gdb-multiarch",
+            "runToEntryPoint": "main",
+            "gdbTarget": "localhost:3333",
+            "svdFile": "${workspaceFolder}/core/STM32F410.svd",
+            "preLaunchTask": "CMake: build",
+        }
+    ]
+}
