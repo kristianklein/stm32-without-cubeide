@@ -13,6 +13,7 @@ void default_handler(void);
 void nmi_handler(void) __attribute__((weak, alias("default_handler")));
 void hard_fault_handler(void) __attribute__((weak, alias("default_handler")));
 void bus_fault_handler(void) __attribute__((weak, alias("default_handler")));
+void memMngr_fault_handler(void) __attribute__((weak, alias("default_handler")));
 void usage_fault_handler(void) __attribute__((weak, alias("default_handler")));
 void svcall_handler(void) __attribute__((weak, alias("default_handler")));
 void debug_monitor_handler(void) __attribute__((weak, alias("default_handler")));
@@ -81,9 +82,9 @@ uint32_t isr_vector[ISR_VECTOR_SIZE_WORDS] __attribute__((section(".isr_vector")
   (uint32_t)&reset_handler,
   (uint32_t)&nmi_handler,
   (uint32_t)&hard_fault_handler,
+  (uint32_t)&memMngr_fault_handler,
   (uint32_t)&bus_fault_handler,
   (uint32_t)&usage_fault_handler,
-  0,
   0,
   0,
   0,
