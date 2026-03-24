@@ -13,7 +13,7 @@ void default_handler(void);
 void nmi_handler(void) __attribute__((weak, alias("default_handler")));
 void hard_fault_handler(void) __attribute__((weak, alias("default_handler")));
 void bus_fault_handler(void) __attribute__((weak, alias("default_handler")));
-void memMngr_fault_handler(void) __attribute__((weak, alias("default_handler")));
+void mem_manage_fault_handler(void) __attribute__((weak, alias("default_handler")));
 void usage_fault_handler(void) __attribute__((weak, alias("default_handler")));
 void svcall_handler(void) __attribute__((weak, alias("default_handler")));
 void debug_monitor_handler(void) __attribute__((weak, alias("default_handler")));
